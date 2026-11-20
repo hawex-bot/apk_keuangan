@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catatan Keuangan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="./icons/icon-512.png" type="image/png">
+  <link rel="apple-touch-icon" href="./icons/icon-512.png">
+  <link rel="manifest" href="./manifest.json">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <!-- Toast Container -->
+  <div id="toastContainer"></div>
+
+  <!-- Background blobs -->
+  <div class="bg-blob blob-1"></div>
+  <div class="bg-blob blob-2"></div>
+  <div class="bg-blob blob-3"></div>
+
+  <div class="app fade-in">
+
+    <!-- HEADER -->
+    <header class="header glass">
+      <div class="header-left">
+        <h1>💰 Catatan Keuangan</h1>
+        <p class="subtitle">Kelola pemasukan &amp; pengeluaranmu dengan elegan</p>
+      </div>
+      <div class="header-right">
+        <button id="themeToggle" class="theme-toggle" title="Ganti Tema">🌙</button>
+      </div>
+    </header>
+
+    <div class="layout-grid">
+      <!-- KOLOM KIRI -->
+      <div class="col-left">
+
+        <!-- SUMMARY CARDS -->
+        <section class="summary">
+          <div class="summary-card income-card glass">
+            <span class="summary-label" id="labelMasuk">Pemasukan</span>
+            <span class="summary-value" id="totalMasuk">Rp 0</span>
+          </div>
+          <div class="summary-card expense-card glass">
+            <span class="summary-label" id="labelKeluar">Pengeluaran</span>
+            <span class="summary-value" id="totalKeluar">Rp 0</span>
+          </div>
+          <div class="summary-card balance-card glass">
+            <span class="summary-label" id="labelSaldo">Saldo</span>
+            <span class="summary-value" id="totalSaldo">Rp 0</span>
+          </div>
+        </section>
+
+        <!-- BUDGET -->
+        <section class="budget-section glass">
+          <div class="budget-header">
+            <h2>🎯 Budget Bulanan</h2>
+            <button id="btnSetBudget" class="btn-secondary">⚙️ Atur</button>
+          </div>
+          <div class="budget-display">
+            <div class="budget-info">
+              <span id="budgetStatusText">Belum ada budget diset.</span>
+              <span class="budget-numbers" id="budgetNumbers"></span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill safe" id="budgetProgress" style="width: 0%;"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- FORM -->
+        <section class="form-section glass">
+          <h2>Tambah Transaksi</h2>
+          <div class="type-toggle">
+            <button type="button" data-tipe="keluar" class="active">💸 Pengeluaran</button>
+            <button type="button" data-tipe="masuk">💵 Pemasukan</button>
+          </div>
+          <form id="formTransaksi">
+            <div class="form-grid">
+              <div class="field">
+                <label for="tanggal">Tanggal</label>
+                <input type="date" id="tanggal" required>
+              </div>
+              <div class="field">
+                <label for="kategori">Kategori</label>
+                <input type="text" id="kategori" list="kategoriList" placeholder="Contoh: Makanan" required maxlength="30" autocomplete="off">
+                <datalist id="kategoriList"></datalist>
+              </div>
+              <div class="field">
+                <label for="jumlah">Jumlah (Rp)</label>
+                <input type="text" id="jumlah" inputmode="numeric" placeholder="0" required autocomplete="off">
+              </div>
+              <div class="field">
+                <label for="catatan">Catatan</label>
+                <input type="text" id="catatan" placeholder="Opsional" maxlength="80">
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn-primary is-expense" id="btnSubmit">+ Tambah Pengeluaran</button>
+              <button type="button" class="btn-cancel" id="btnCancel">✕ Batal</button>
+            </div>
+          </form>
+        </section>
+      </div>
+
+      <!-- KOLOM KANAN -->
+      <div class="col-right">
+
+        <!-- CHART -->
+        <section class="chart-section glass">
+          <h2 id="chartTitle">Distribusi Pengeluaran</h2>
+          <div class="chart-container">
+            <canvas id="pieChart"></canvas>
+          </div>
+          <p id="chartEmptyState" class="empty-state hidden">
+            <span class="empty-icon">📉</span>
+            Belum ada data pengeluaran.
+          </p>
+        </section>
+
+        <!-- RIWAYAT -->
+        <section class="list-section glass">
+          <div class="list-header">
+            <h2>Riwayat Transaksi</h2>
+            <div class="list-header-right">
+              <span class="transaction-count" id="transactionCount">0 transaksi</span>
+              <button class="btn-export" id="btnExport" title="Export CSV">📥 CSV</button>
+              <button class="btn-danger-outline" id="btnClearAll" title="Hapus semua">🗑️ <span class="btn-clear-text">Hapus Semua</span></button>
+            </div>
+          </div>
+
+          <!-- FILTER DROPDOWN -->
+          <div class="filters">
+            <div class="custom-select" id="customTipe">
+              <div class="select-trigger">
+                <span class="selected-text">Semua Tipe</span>
+                <span class="arrow">▼</span>
+              </div>
+              <div class="select-options">
+                <div class="option selected" data-value="">Semua Tipe</div>
+                <div class="option" data-value="masuk">💵 Pemasukan</div>
+                <div class="option" data-value="keluar">💸 Pengeluaran</div>
+              </div>
+              <input type="hidden" id="filterTipe" value="">
+            </div>
+
+            <div class="custom-select" id="customKategori">
+              <div class="select-trigger">
+                <span class="selected-text">Semua Kategori</span>
+                <span class="arrow">▼</span>
+              </div>
+              <div class="select-options"></div>
+              <input type="hidden" id="filterKategori" value="">
+            </div>
+
+            <div class="custom-select" id="customBulan">
+              <div class="select-trigger">
+                <span class="selected-text">Semua Bulan</span>
+                <span class="arrow">▼</span>
+              </div>
+              <div class="select-options"></div>
+              <input type="hidden" id="filterBulan" value="">
+            </div>
+          </div>
+
+          <ul id="daftarTransaksi" class="expense-list"></ul>
+          <p id="emptyState" class="empty-state">
+            <span class="empty-icon">📝</span>
+            Belum ada transaksi. Yuk mulai catat!
+          </p>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('SW registered:', reg.scope))
+          .catch(err => console.warn('SW failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>
